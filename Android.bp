@@ -13,7 +13,6 @@
 //# See the License for the specific language governing permissions and
 //# limitations under the License.
 //#
-
 //############################################################
 //   Note:
 //
@@ -47,7 +46,6 @@
 //           PKG_CONFIG_LIBDIR=$PLATFORM_PREFIX/lib/pkgconfig
 //       make install
 //
-
 //############################################################
 //   build the harfbuzz shared library
 //
@@ -155,7 +153,6 @@ cc_library {
         "src/hb-subset.cc",
         "src/hb-map.cc",
     ],
-
     target: {
         android: {
             shared_libs: [
@@ -173,12 +170,10 @@ cc_library {
             enabled: true,
         },
     },
-
     shared_libs: [
         "libicu",
         "liblog",
     ],
-
     export_include_dirs: ["src"],
     cflags: [
         "-DHAVE_INTEL_ATOMIC_PRIMITIVES",
