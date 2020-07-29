@@ -180,8 +180,12 @@ cc_library {
         "-DHAVE_OT",
         "-DHAVE_ICU",
         "-DHAVE_ICU_BUILTIN",
+        "-Os",
         "-Werror",
         "-Wno-unused-parameter",
         "-Wno-missing-field-initializers",
     ],
+    lto: {
+        thin: true,
+    },
 }
