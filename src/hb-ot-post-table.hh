@@ -56,7 +56,7 @@ struct postV2Tail
   }
 
   protected:
-  ArrayOf<HBUINT16>	glyphNameIndex;	/* This is not an offset, but is the
+  Array16Of<HBUINT16>	glyphNameIndex;	/* This is not an offset, but is the
 					 * ordinal number of the glyph in 'post'
 					 * string tables. */
 /*UnsizedArrayOf<HBUINT8>
@@ -117,7 +117,7 @@ struct post
     void fini ()
     {
       index_to_offset.fini ();
-      free (gids_sorted_by_name.get ());
+      hb_free (gids_sorted_by_name.get ());
       table.destroy ();
     }
 
@@ -148,7 +148,7 @@ struct post
 
       if (unlikely (!gids))
       {
-	gids = (uint16_t *) malloc (count * sizeof (gids[0]));
+	gids = (uint16_t *) hb_malloc (count * sizeof (gids[0]));
 	if (unlikely (!gids))
 	  return false; /* Anything better?! */
 
@@ -158,7 +158,7 @@ struct post
 
 	if (unlikely (!gids_sorted_by_name.cmpexch (nullptr, gids)))
 	{
-	  free (gids);
+	  hb_free (gids);
 	  goto retry;
 	}
       }
@@ -236,7 +236,7 @@ struct post
 
     private:
     uint32_t version;
-    const ArrayOf<HBUINT16> *glyphNameIndex;
+    const Array16Of<HBUINT16> *glyphNameIndex;
     hb_vector_t<uint32_t> index_to_offset;
     const uint8_t *pool;
     hb_atomic_ptr_t<uint16_t *> gids_sorted_by_name;

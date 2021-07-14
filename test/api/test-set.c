@@ -121,6 +121,11 @@ test_set_basic (void)
   hb_set_del (s, 800);
   g_assert (!hb_set_has (s, 800));
 
+  g_assert_cmpint (hb_set_get_max (s), ==, 799);
+
+  hb_set_del_range (s, 0, 799);
+  g_assert_cmpint (hb_set_get_max (s), ==, HB_SET_VALUE_INVALID);
+
   hb_set_destroy (s);
 }
 
@@ -208,6 +213,58 @@ static void test_set_union (void)
   hb_set_destroy (a);
   hb_set_destroy (b);
   hb_set_destroy (u);
+}
+
+static void
+test_set_subsets (void)
+{
+  hb_set_t *s = hb_set_create ();
+  hb_set_t *l = hb_set_create ();
+
+  hb_set_add (l, 0x0FFFF);
+  hb_set_add (s, 0x1FFFF);
+  g_assert (!hb_set_is_subset (s, l));
+  hb_set_clear (s);
+
+  hb_set_add (s, 0x0FFF0);
+  g_assert (!hb_set_is_subset (s, l));
+  hb_set_clear (s);
+
+  hb_set_add (s, 0x0AFFF);
+  g_assert (!hb_set_is_subset (s, l));
+
+  hb_set_clear (s);
+  g_assert (hb_set_is_subset (s, l));
+
+  hb_set_clear (l);
+  g_assert (hb_set_is_subset (s, l));
+
+  hb_set_add (s, 0x1FFFF);
+  g_assert (!hb_set_is_subset (s, l));
+  hb_set_clear (s);
+
+  hb_set_add (s, 0xFF);
+  hb_set_add (s, 0x1FFFF);
+  hb_set_add (s, 0x2FFFF);
+
+  hb_set_add (l, 0xFF);
+  hb_set_add (l, 0x1FFFF);
+  hb_set_add (l, 0x2FFFF);
+
+  g_assert (hb_set_is_subset (s, l));
+  hb_set_del (l, 0xFF);
+  g_assert (!hb_set_is_subset (s, l));
+  hb_set_add (l, 0xFF);
+
+  hb_set_del (l, 0x2FFFF);
+  g_assert (!hb_set_is_subset (s, l));
+  hb_set_add (l, 0x2FFFF);
+
+  hb_set_del (l, 0x1FFFF);
+  g_assert (!hb_set_is_subset (s, l));
+
+  hb_set_destroy (s);
+  hb_set_destroy (l);
 }
 
 static void
@@ -501,7 +558,7 @@ test_set_delrange (void)
 
   for (unsigned i = 0; i < n; i++)
     hb_set_del_range (s, ranges[i].b, ranges[i].e);
-    
+
   hb_set_del_range (s, P*13+5, P*15-10);	/* Deletion from deleted pages. */
 
   for (unsigned i = 0; i < n; i++)
@@ -523,6 +580,7 @@ main (int argc, char **argv)
   hb_test_init (&argc, &argv);
 
   hb_test_add (test_set_basic);
+  hb_test_add (test_set_subsets);
   hb_test_add (test_set_algebra);
   hb_test_add (test_set_iter);
   hb_test_add (test_set_empty);

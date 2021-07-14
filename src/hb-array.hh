@@ -219,7 +219,7 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
 	    unsigned P = sizeof (Type),
 	    hb_enable_if (P == 1)>
   const T *as () const
-  { return length < hb_null_size (T) ? &Null (T) : reinterpret_cast<const T *> (arrayZ); }
+  { return length < hb_min_size (T) ? &Null (T) : reinterpret_cast<const T *> (arrayZ); }
 
   template <typename T,
 	    unsigned P = sizeof (Type),
@@ -231,9 +231,9 @@ struct hb_array_t : hb_iter_with_fallback_t<hb_array_t<Type>, Type&>
 	&& (unsigned int) (arrayZ + length - (const char *) p) >= size;
   }
 
-  /* Only call if you allocated the underlying array using malloc() or similar. */
-  void free ()
-  { ::free ((void *) arrayZ); arrayZ = nullptr; length = 0; }
+  /* Only call if you allocated the underlying array using hb_malloc() or similar. */
+  void fini ()
+  { hb_free ((void *) arrayZ); arrayZ = nullptr; length = 0; }
 
   template <typename hb_serialize_context_t>
   hb_array_t copy (hb_serialize_context_t *c) const
