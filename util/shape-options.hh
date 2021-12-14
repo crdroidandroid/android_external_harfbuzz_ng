@@ -55,6 +55,7 @@ struct shape_options_t
 				  (remove_default_ignorables ? HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES : 0) |
 				  0));
     hb_buffer_set_invisible_glyph (buffer, invisible_glyph);
+    hb_buffer_set_not_found_glyph (buffer, not_found_glyph);
     hb_buffer_set_cluster_level (buffer, cluster_level);
     hb_buffer_guess_segment_properties (buffer);
   }
@@ -108,7 +109,7 @@ struct shape_options_t
     if (!hb_shape_full (font, buffer, features, num_features, shapers))
     {
       if (error)
-	*error = "all shapers failed.";
+	*error = "All shapers failed.";
       goto fail;
     }
 
@@ -235,7 +236,6 @@ struct shape_options_t
       hb_buffer_clear_contents (fragment);
       copy_buffer_properties (fragment, buffer);
 
-      /* TODO: Add pre/post context text. */
       hb_buffer_flags_t flags = hb_buffer_get_flags (fragment);
       if (0 < text_start)
 	flags = (hb_buffer_flags_t) (flags & ~HB_BUFFER_FLAG_BOT);
@@ -247,7 +247,7 @@ struct shape_options_t
       if (!hb_shape_full (font, fragment, features, num_features, shapers))
       {
 	if (error)
-	  *error = "all shapers failed while shaping fragment.";
+	  *error = "All shapers failed while shaping fragment.";
 	hb_buffer_destroy (reconstruction);
 	hb_buffer_destroy (fragment);
 	return false;
@@ -306,6 +306,7 @@ struct shape_options_t
   char **shapers = nullptr;
   hb_bool_t utf8_clusters = false;
   hb_codepoint_t invisible_glyph = 0;
+  hb_codepoint_t not_found_glyph = 0;
   hb_buffer_cluster_level_t cluster_level = HB_BUFFER_CLUSTER_LEVEL_DEFAULT;
   hb_bool_t normalize_glyphs = false;
   hb_bool_t verify = false;
@@ -421,13 +422,14 @@ shape_options_t::add_options (option_parser_t *parser)
 			      G_OPTION_ARG_CALLBACK,	(gpointer) &parse_shapers,	"Hidden duplicate of --shapers",	nullptr},
     {"shapers",		0, 0, G_OPTION_ARG_CALLBACK,	(gpointer) &parse_shapers,	"Set comma-separated list of shapers to try","list"},
     {"direction",	0, 0, G_OPTION_ARG_STRING,	&this->direction,		"Set text direction (default: auto)",	"ltr/rtl/ttb/btt"},
-    {"language",	0, 0, G_OPTION_ARG_STRING,	&this->language,		"Set text language (default: $LANG)",	"langstr"},
+    {"language",	0, 0, G_OPTION_ARG_STRING,	&this->language,		"Set text language (default: $LANG)",	"BCP 47 tag"},
     {"script",		0, 0, G_OPTION_ARG_STRING,	&this->script,			"Set text script (default: auto)",	"ISO-15924 tag"},
     {"bot",		0, 0, G_OPTION_ARG_NONE,	&this->bot,			"Treat text as beginning-of-paragraph",	nullptr},
     {"eot",		0, 0, G_OPTION_ARG_NONE,	&this->eot,			"Treat text as end-of-paragraph",	nullptr},
     {"preserve-default-ignorables",0, 0, G_OPTION_ARG_NONE,	&this->preserve_default_ignorables,	"Preserve Default-Ignorable characters",	nullptr},
     {"remove-default-ignorables",0, 0, G_OPTION_ARG_NONE,	&this->remove_default_ignorables,	"Remove Default-Ignorable characters",	nullptr},
     {"invisible-glyph",	0, 0, G_OPTION_ARG_INT,		&this->invisible_glyph,		"Glyph value to replace Default-Ignorables with",	nullptr},
+    {"not-found-glyph",	0, 0, G_OPTION_ARG_INT,		&this->not_found_glyph,		"Glyph value to replace not-found characters with",	nullptr},
     {"utf8-clusters",	0, 0, G_OPTION_ARG_NONE,	&this->utf8_clusters,		"Use UTF8 byte indices, not char indices",	nullptr},
     {"cluster-level",	0, 0, G_OPTION_ARG_INT,		&this->cluster_level,		"Cluster merging level (default: 0)",	"0/1/2"},
     {"normalize-glyphs",0, 0, G_OPTION_ARG_NONE,	&this->normalize_glyphs,	"Rearrange glyph clusters in nominal order",	nullptr},

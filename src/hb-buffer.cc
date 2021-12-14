@@ -224,6 +224,7 @@ hb_buffer_t::reset ()
   flags = HB_BUFFER_FLAG_DEFAULT;
   replacement = HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT;
   invisible = 0;
+  not_found = 0;
 
   clear ();
 }
@@ -395,52 +396,6 @@ hb_buffer_t::set_masks (hb_mask_t    value,
 }
 
 void
-hb_buffer_t::reverse_range (unsigned int start,
-			    unsigned int end)
-{
-  if (end - start < 2)
-    return;
-
-  hb_array_t<hb_glyph_info_t> (info, len).reverse (start, end);
-
-  if (have_positions) {
-    hb_array_t<hb_glyph_position_t> (pos, len).reverse (start, end);
-  }
-}
-
-void
-hb_buffer_t::reverse ()
-{
-  if (unlikely (!len))
-    return;
-
-  reverse_range (0, len);
-}
-
-void
-hb_buffer_t::reverse_clusters ()
-{
-  unsigned int i, start, count, last_cluster;
-
-  if (unlikely (!len))
-    return;
-
-  reverse ();
-
-  count = len;
-  start = 0;
-  last_cluster = info[0].cluster;
-  for (i = 1; i < count; i++) {
-    if (last_cluster != info[i].cluster) {
-      reverse_range (start, i);
-      start = i;
-      last_cluster = info[i].cluster;
-    }
-  }
-  reverse_range (start, i);
-}
-
-void
 hb_buffer_t::merge_clusters_impl (unsigned int start,
 				  unsigned int end)
 {
@@ -542,7 +497,7 @@ void
 hb_buffer_t::unsafe_to_break_impl (unsigned int start, unsigned int end)
 {
   unsigned int cluster = UINT_MAX;
-  cluster = _unsafe_to_break_find_min_cluster (info, start, end, cluster);
+  cluster = _infos_find_min_cluster (info, start, end, cluster);
   _unsafe_to_break_set_mask (info, start, end, cluster);
 }
 void
@@ -558,8 +513,9 @@ hb_buffer_t::unsafe_to_break_from_outbuffer (unsigned int start, unsigned int en
   assert (idx <= end);
 
   unsigned int cluster = UINT_MAX;
-  cluster = _unsafe_to_break_find_min_cluster (out_info, start, out_len, cluster);
-  cluster = _unsafe_to_break_find_min_cluster (info, idx, end, cluster);
+  cluster = _infos_find_min_cluster (out_info, start, out_len, cluster);
+  cluster = _infos_find_min_cluster (info, idx, end, cluster);
+
   _unsafe_to_break_set_mask (out_info, start, out_len, cluster);
   _unsafe_to_break_set_mask (info, idx, end, cluster);
 }
@@ -608,6 +564,7 @@ DEFINE_NULL_INSTANCE (hb_buffer_t) =
   HB_BUFFER_CLUSTER_LEVEL_DEFAULT,
   HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT,
   0, /* invisible */
+  0, /* not_found */
   HB_BUFFER_SCRATCH_FLAG_DEFAULT,
   HB_BUFFER_MAX_LEN_DEFAULT,
   HB_BUFFER_MAX_OPS_DEFAULT,
@@ -1156,6 +1113,46 @@ hb_codepoint_t
 hb_buffer_get_invisible_glyph (hb_buffer_t    *buffer)
 {
   return buffer->invisible;
+}
+
+/**
+ * hb_buffer_set_not_found_glyph:
+ * @buffer: An #hb_buffer_t
+ * @not_found: the not-found #hb_codepoint_t
+ *
+ * Sets the #hb_codepoint_t that replaces characters not found in
+ * the font during shaping.
+ *
+ * The not-found glyph defaults to zero, sometimes knows as the
+ * ".notdef" glyph.  This API allows for differentiating the two.
+ *
+ * Since: 3.1.0
+ **/
+void
+hb_buffer_set_not_found_glyph (hb_buffer_t    *buffer,
+			       hb_codepoint_t  not_found)
+{
+  if (unlikely (hb_object_is_immutable (buffer)))
+    return;
+
+  buffer->not_found = not_found;
+}
+
+/**
+ * hb_buffer_get_not_found_glyph:
+ * @buffer: An #hb_buffer_t
+ *
+ * See hb_buffer_set_not_found_glyph().
+ *
+ * Return value:
+ * The @buffer not-found #hb_codepoint_t
+ *
+ * Since: 3.1.0
+ **/
+hb_codepoint_t
+hb_buffer_get_not_found_glyph (hb_buffer_t    *buffer)
+{
+  return buffer->not_found;
 }
 
 
@@ -1755,6 +1752,28 @@ hb_buffer_append (hb_buffer_t *buffer,
   memcpy (buffer->info + orig_len, source->info + start, (end - start) * sizeof (buffer->info[0]));
   if (buffer->have_positions)
     memcpy (buffer->pos + orig_len, source->pos + start, (end - start) * sizeof (buffer->pos[0]));
+
+  if (source->content_type == HB_BUFFER_CONTENT_TYPE_UNICODE)
+  {
+    /* See similar logic in add_utf. */
+
+    /* pre-context */
+    if (!orig_len && start + source->context_len[0] > 0)
+    {
+      buffer->clear_context (0);
+      while (start > 0 && buffer->context_len[0] < buffer->CONTEXT_LENGTH)
+	buffer->context[0][buffer->context_len[0]++] = source->info[--start].codepoint;
+      for (auto i = 0u; i < source->context_len[0] && buffer->context_len[0] < buffer->CONTEXT_LENGTH; i++)
+	buffer->context[0][buffer->context_len[0]++] = source->context[0][i];
+    }
+
+    /* post-context */
+    buffer->clear_context (1);
+    while (end < source->len && buffer->context_len[1] < buffer->CONTEXT_LENGTH)
+      buffer->context[1][buffer->context_len[1]++] = source->info[end++].codepoint;
+    for (auto i = 0u; i < source->context_len[1] && buffer->context_len[1] < buffer->CONTEXT_LENGTH; i++)
+      buffer->context[1][buffer->context_len[1]++] = source->context[1][i];
+  }
 }
 
 
