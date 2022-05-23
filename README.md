@@ -1,13 +1,10 @@
-[![Travis Build Status](https://travis-ci.org/harfbuzz/harfbuzz.svg?branch=master)](https://travis-ci.org/harfbuzz/harfbuzz)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/0t0flrxpstj9lb9w?svg=true&branch=master)](https://ci.appveyor.com/project/harfbuzz/harfbuzz)
-[![CircleCI Build Status](https://circleci.com/gh/harfbuzz/harfbuzz/tree/master.svg?style=svg)](https://circleci.com/gh/harfbuzz/harfbuzz/tree/master)
+[![Linux CI Status](https://github.com/harfbuzz/harfbuzz/workflows/linux-ci/badge.svg)](https://github.com/harfbuzz/harfbuzz/workflows/linux-ci/badge.svg)
+[![CircleCI Build Status](https://circleci.com/gh/harfbuzz/harfbuzz/tree/main.svg?style=svg)](https://circleci.com/gh/harfbuzz/harfbuzz/tree/main)
 [![OSS-Fuzz Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/harfbuzz.svg)](https://oss-fuzz-build-logs.storage.googleapis.com/index.html)
-[![Coverity Code Health](https://img.shields.io/coverity/scan/5450.svg)](https://scan.coverity.com/projects/behdad-harfbuzz)
-[![Codacy Code Health](https://api.codacy.com/project/badge/Grade/f17f1708783c447488bc8dd317150eaa)](https://app.codacy.com/app/behdad/harfbuzz)
-[![Codecov Code Coverage](https://codecov.io/gh/harfbuzz/harfbuzz/branch/master/graph/badge.svg)](https://codecov.io/gh/harfbuzz/harfbuzz)
-[![Coverals Code Coverage](https://img.shields.io/coveralls/harfbuzz/harfbuzz.svg)](https://coveralls.io/r/harfbuzz/harfbuzz)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/15166/badge.svg)](https://scan.coverity.com/projects/harfbuzz)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/89c872f5ce1c42af802602bfcd15d90a)](https://www.codacy.com/gh/harfbuzz/harfbuzz/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=harfbuzz/harfbuzz&amp;utm_campaign=Badge_Grade)
+[![Codecov Code Coverage](https://codecov.io/gh/harfbuzz/harfbuzz/branch/main/graph/badge.svg)](https://codecov.io/gh/harfbuzz/harfbuzz)
 [![Packaging status](https://repology.org/badge/tiny-repos/harfbuzz.svg)](https://repology.org/project/harfbuzz/versions)
-[ABI Tracker](http://abi-laboratory.pro/tracker/timeline/harfbuzz/)
 
 This is HarfBuzz, a text shaping library.
 
@@ -27,8 +24,8 @@ Documentation: https://harfbuzz.github.io
 
 
 <details>
-  <summary>Packaging status of HarfBuzz</summary
+  <summary>Packaging status of HarfBuzz</summary>
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/harfbuzz.svg?header=harfbuzz)](https://repology.org/project/harfbuzz/versions)  
+[![Packaging status](https://repology.org/badge/vertical-allrepos/harfbuzz.svg?header=harfbuzz)](https://repology.org/project/harfbuzz/versions)
 
 </details>

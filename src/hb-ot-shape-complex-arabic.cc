@@ -33,7 +33,7 @@
 
 
 /* buffer var allocations */
-#define arabic_shaping_action() complex_var_u8_0() /* arabic shaping action */
+#define arabic_shaping_action() complex_var_u8_auxiliary() /* arabic shaping action */
 
 #define HB_BUFFER_SCRATCH_FLAG_ARABIC_HAS_STCH HB_BUFFER_SCRATCH_FLAG_COMPLEX0
 
@@ -228,8 +228,6 @@ collect_features_arabic (hb_ot_shape_planner_t *plan)
   map->enable_feature (HB_TAG('c','a','l','t'), F_MANUAL_ZWJ);
   map->add_gsub_pause (nullptr);
 
-  /* And undo here. */
-
   /* The spec includes 'cswh'.  Earlier versions of Windows
    * used to enable this by default, but testing suggests
    * that Windows 8 and later do not enable it by default,
@@ -261,7 +259,7 @@ struct arabic_shape_plan_t
 void *
 data_create_arabic (const hb_ot_shape_plan_t *plan)
 {
-  arabic_shape_plan_t *arabic_plan = (arabic_shape_plan_t *) calloc (1, sizeof (arabic_shape_plan_t));
+  arabic_shape_plan_t *arabic_plan = (arabic_shape_plan_t *) hb_calloc (1, sizeof (arabic_shape_plan_t));
   if (unlikely (!arabic_plan))
     return nullptr;
 
@@ -271,7 +269,7 @@ data_create_arabic (const hb_ot_shape_plan_t *plan)
     arabic_plan->mask_array[i] = plan->map.get_1_mask (arabic_features[i]);
     arabic_plan->do_fallback = arabic_plan->do_fallback &&
 			       (FEATURE_IS_SYRIAC (arabic_features[i]) ||
-			        plan->map.needs_fallback (arabic_features[i]));
+				plan->map.needs_fallback (arabic_features[i]));
   }
 
   return arabic_plan;
@@ -284,7 +282,7 @@ data_destroy_arabic (void *data)
 
   arabic_fallback_plan_destroy (arabic_plan->fallback_plan);
 
-  free (data);
+  hb_free (data);
 }
 
 static void
@@ -292,7 +290,7 @@ arabic_joining (hb_buffer_t *buffer)
 {
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
-  unsigned int prev = (unsigned int) -1, state = 0;
+  unsigned int prev = UINT_MAX, state = 0;
 
   /* Check pre-context */
   for (unsigned int i = 0; i < buffer->context_len[0]; i++)
@@ -318,10 +316,24 @@ arabic_joining (hb_buffer_t *buffer)
 
     const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
 
-    if (entry->prev_action != NONE && prev != (unsigned int) -1)
+    if (entry->prev_action != NONE && prev != UINT_MAX)
     {
       info[prev].arabic_shaping_action() = entry->prev_action;
       buffer->unsafe_to_break (prev, i + 1);
+    }
+    else
+    {
+      if (prev == UINT_MAX)
+      {
+        if (this_type >= JOINING_TYPE_R)
+	  buffer->unsafe_to_concat_from_outbuffer (0, i + 1);
+      }
+      else
+      {
+	if (this_type >= JOINING_TYPE_R ||
+	    (2 <= state && state <= 5) /* States that have a possible prev_action. */)
+	  buffer->unsafe_to_concat (prev, i + 1);
+      }
     }
 
     info[i].arabic_shaping_action() = entry->curr_action;
@@ -338,8 +350,15 @@ arabic_joining (hb_buffer_t *buffer)
       continue;
 
     const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
-    if (entry->prev_action != NONE && prev != (unsigned int) -1)
+    if (entry->prev_action != NONE && prev != UINT_MAX)
+    {
       info[prev].arabic_shaping_action() = entry->prev_action;
+      buffer->unsafe_to_break (prev, buffer->len);
+    }
+    else if (2 <= state && state <= 5) /* States that have a possible prev_action. */
+    {
+      buffer->unsafe_to_concat (prev, buffer->len);
+    }
     break;
   }
 }
@@ -351,7 +370,7 @@ mongolian_variation_selectors (hb_buffer_t *buffer)
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
   for (unsigned int i = 1; i < count; i++)
-    if (unlikely (hb_in_range<hb_codepoint_t> (info[i].codepoint, 0x180Bu, 0x180Du)))
+    if (unlikely (hb_in_ranges<hb_codepoint_t> (info[i].codepoint, 0x180Bu, 0x180Du, 0x180Fu, 0x180Fu)))
       info[i].arabic_shaping_action() = info[i - 1].arabic_shaping_action();
 }
 
@@ -604,7 +623,7 @@ postprocess_glyphs_arabic (const hb_ot_shape_plan_t *plan,
   HB_BUFFER_DEALLOCATE_VAR (buffer, arabic_shaping_action);
 }
 
-/* http://www.unicode.org/reports/tr53/ */
+/* https://www.unicode.org/reports/tr53/ */
 
 static hb_codepoint_t
 modifier_combining_marks[] =
@@ -616,6 +635,11 @@ modifier_combining_marks[] =
   0x06E3u, /* ARABIC SMALL LOW SEEN */
   0x06E7u, /* ARABIC SMALL HIGH YEH */
   0x06E8u, /* ARABIC SMALL HIGH NOON */
+  0x08CAu, /* ARABIC SMALL HIGH FARSI YEH */
+  0x08CBu, /* ARABIC SMALL HIGH YEH BARREE WITH TWO DOTS BELOW */
+  0x08CDu, /* ARABIC SMALL HIGH ZAH */
+  0x08CEu, /* ARABIC LARGE ROUND DOT ABOVE */
+  0x08CFu, /* ARABIC LARGE ROUND DOT BELOW */
   0x08D3u, /* ARABIC SMALL LOW WAW */
   0x08F3u, /* ARABIC SMALL HIGH WAW */
 };

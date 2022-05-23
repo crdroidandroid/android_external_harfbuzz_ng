@@ -12,7 +12,7 @@ lib:
 libs:
 	@$(MAKE) $(AM_MAKEFLAGS) -C $(top_builddir)/src libs
 
-EXTRA_DIST += CMakeLists.txt
+EXTRA_DIST += meson.build
 
 EXTRA_DIST += fonts
 
@@ -30,31 +30,62 @@ noinst_PROGRAMS = $(TEST_PROGS)
 TEST_PROGS = \
 	test-aat-layout \
 	test-baseline \
+	test-be-glyph-advance \
+	test-be-num-glyphs \
 	test-blob \
 	test-buffer \
+	test-c \
 	test-collect-unicodes \
+	test-cplusplus \
 	test-common \
+	test-draw \
 	test-font \
+	test-font-scale \
 	test-map \
 	test-object \
+	test-ot-alternates \
+	test-ot-color \
+	test-ot-collect-glyphs \
 	test-ot-face \
+	test-ot-glyphname \
+	test-ot-ligature-carets \
+	test-ot-layout \
+	test-ot-name \
+	test-ot-meta \
+	test-ot-metrics \
+	test-ot-tag \
+	test-ot-extents-cff \
+	test-ot-metrics-tt-var \
 	test-set \
 	test-shape \
+	test-style \
 	test-subset \
 	test-subset-cmap \
 	test-subset-drop-tables \
 	test-subset-glyf \
 	test-subset-hdmx \
 	test-subset-hmtx \
+	test-subset-nameids \
 	test-subset-os2 \
 	test-subset-post \
 	test-subset-vmtx \
 	test-subset-cff1 \
 	test-subset-cff2 \
+	test-subset-gvar \
+	test-subset-hvar \
+	test-subset-vvar \
+	test-subset-sbix \
+	test-subset-gpos \
+	test-subset-colr \
+	test-subset-cbdt \
+	test-subset-repacker \
 	test-unicode \
+	test-var-coords \
 	test-version \
-	test-subset-nameids \
 	$(NULL)
+
+test_draw_CPPFLAGS = $(AM_CPPFLAGS)
+test_draw_LDADD = $(LDADD)
 
 test_subset_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
 test_subset_cmap_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
@@ -67,7 +98,15 @@ test_subset_post_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
 test_subset_vmtx_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
 test_subset_cff1_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
 test_subset_cff2_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
+test_subset_gvar_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
+test_subset_hvar_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
+test_subset_vvar_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
+test_subset_sbix_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
+test_subset_cbdt_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
 test_subset_nameids_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
+test_subset_gpos_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
+test_subset_colr_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
+test_subset_repacker_LDADD = $(LDADD) $(top_builddir)/src/libharfbuzz-subset.la
 
 test_unicode_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
@@ -78,19 +117,6 @@ if HAVE_ICU
 test_unicode_CPPFLAGS += $(ICU_CFLAGS)
 test_unicode_LDADD += $(top_builddir)/src/libharfbuzz-icu.la $(ICU_LIBS)
 endif
-
-
-TEST_PROGS += \
-	test-ot-color \
-	test-ot-ligature-carets \
-	test-ot-name \
-	test-ot-meta \
-	test-ot-metrics \
-	test-ot-tag \
-	test-ot-extents-cff \
-	test-ot-metrics-tt-var \
-	$(NULL)
-
 
 if HAVE_PTHREAD
 if HAVE_FREETYPE
@@ -104,6 +130,9 @@ endif
 endif
 
 if HAVE_FREETYPE
+test_draw_CPPFLAGS += $(FREETYPE_CFLAGS)
+test_draw_LDADD += $(FREETYPE_LIBS)
+
 TEST_PROGS += \
 	test-ot-math \
 	$(NULL)
@@ -111,12 +140,7 @@ test_ot_math_LDADD = $(LDADD) $(FREETYPE_LIBS)
 test_ot_math_CPPFLAGS = $(AM_CPPFLAGS) $(FREETYPE_CFLAGS)
 endif # HAVE_FREETYPE
 
-
 # Tests for header compilation
-TEST_PROGS += \
-	test-c \
-	test-cplusplus \
-	$(NULL)
 test_cplusplus_SOURCES = test-cplusplus.cc
 test_c_CPPFLAGS = $(AM_CPPFLAGS)
 test_cplusplus_CPPFLAGS = $(AM_CPPFLAGS)
