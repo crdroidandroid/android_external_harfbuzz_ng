@@ -195,6 +195,7 @@ cc_library {
         "-Werror",
         "-Wno-unused-parameter",
         "-Wno-missing-field-initializers",
+        "-O3",
     ],
     lto: {
         thin: true,
